@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seguridad en Sistemas Operativos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: índice fijo a la izquierda y lectura en una columna con cinco temas numerados en el orden del cuaderno */
+:root {
+  --bg: #F2F5F7;
+  --surface: #FFFFFF;
+  --fg: #14202B;
+  --muted: #53636F;
+  --line: #D3DBE1;
+  --accent: #0A6C8F;
+  --accent-soft: #DDEFF5;
+  --code-bg: #E8EDF1;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E151B;
+    --surface: #16202A;
+    --fg: #E5ECF1;
+    --muted: #94A4B0;
+    --line: #26333F;
+    --accent: #56C3E4;
+    --accent-soft: #123342;
+    --code-bg: #0A1015;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E151B;
+  --surface: #16202A;
+  --fg: #E5ECF1;
+  --muted: #94A4B0;
+  --line: #26333F;
+  --accent: #56C3E4;
+  --accent-soft: #123342;
+  --code-bg: #0A1015;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+.shell {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 64px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-block: 48px 96px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Índice */
+.toc { position: sticky; top: 32px; align-self: start; min-width: 0; }
+.toc-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.toc a {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 4px;
+  padding: 9px 0 9px 12px;
+  border-left: 2px solid var(--line);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+.toc a span:first-child { font-family: var(--font-mono); font-size: 0.8rem; padding-top: 1px; }
+.toc a:hover { color: var(--fg); }
+.toc a[aria-current="true"] { color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+.toc a:focus-visible, .tag-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Encabezado */
+main { min-width: 0; max-width: 760px; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5.2vw, 3.1rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+.lede { font-size: 1.12rem; color: var(--muted); max-width: 60ch; margin: 0 0 8px; }
+
+/* Secciones */
+section { padding-top: 56px; margin-top: 56px; border-top: 1px solid var(--line); scroll-margin-top: 24px; }
+section.first { margin-top: 40px; }
+.sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+.sec-num { font-family: var(--font-mono); font-size: 0.95rem; color: var(--accent); }
+h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.45rem, 3.4vw, 1.95rem);
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.2rem;
+  margin: 36px 0 10px;
+  text-wrap: balance;
+}
+p { margin: 0 0 14px; max-width: 66ch; }
+ul.plain { margin: 0 0 16px; padding-left: 1.2em; max-width: 66ch; }
+ul.plain li { margin-bottom: 8px; padding-left: 4px; }
+ul.plain li::marker { color: var(--accent); }
+strong { font-weight: 600; }
+code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--code-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* Código */
+.code-cap {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 18px 0 6px;
+}
+pre {
+  margin: 0 0 8px;
+  padding: 16px 18px;
+  background: var(--code-bg);
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  tab-size: 2;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+.cm { color: var(--muted); }
+
+/* Tres propiedades */
+.triad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 22px 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.triad > div { padding: 16px 18px; min-width: 0; }
+.triad > div + div { border-left: 1px solid var(--line); }
+.triad b { display: block; font-family: var(--font-display); font-size: 1rem; margin-bottom: 4px; color: var(--accent); }
+.triad span { font-size: 0.9rem; color: var(--muted); line-height: 1.5; display: block; }
+
+/* Tabla */
+.table-wrap { overflow-x: auto; margin: 18px 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.93rem; }
+th, td { text-align: left; padding: 12px 16px; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+
+/* Rejillas de elementos */
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; margin: 22px 0 8px; }
+.item { min-width: 0; border-top: 2px solid var(--fg); padding-top: 12px; }
+.item h3 { margin: 0 0 8px; font-size: 1.1rem; }
+.item p { font-size: 0.95rem; margin-bottom: 8px; }
+.item .lbl { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); display: block; margin-top: 10px; }
+
+.threats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 22px 0 8px; }
+.threat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px 22px; min-width: 0; }
+.threat h3 { margin: 0 0 8px; font-size: 1.15rem; }
+.threat p { font-size: 0.93rem; margin-bottom: 8px; }
+.threat .lbl { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); display: block; margin-top: 12px; margin-bottom: 2px; }
+
+/* Ciclo de respuesta */
+.steps { list-style: none; margin: 22px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; counter-reset: paso; }
+.steps li { position: relative; padding: 16px 18px 18px; border: 1px solid var(--line); background: var(--surface); counter-increment: paso; min-width: 0; }
+.steps li + li { border-left: 0; }
+.steps li:first-child { border-radius: 8px 0 0 8px; }
+.steps li:last-child { border-radius: 0 8px 8px 0; }
+.steps li::before { content: counter(paso); font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent); display: block; margin-bottom: 6px; }
+.steps b { display: block; font-family: var(--font-display); font-size: 0.98rem; line-height: 1.25; margin-bottom: 6px; }
+.steps span { font-size: 0.86rem; color: var(--muted); line-height: 1.5; display: block; }
+
+.callout { margin: 22px 0 8px; padding: 16px 20px; background: var(--accent-soft); border-radius: 8px; max-width: 66ch; font-size: 0.95rem; }
+.callout b { font-family: var(--font-display); }
+
+@media (max-width: 880px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 32px 72px; }
+  .toc { position: static; }
+  .toc ol { flex-direction: row; overflow-x: auto; gap: 8px; padding-bottom: 6px; }
+  .toc a { flex: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; display: flex; gap: 8px; background: var(--surface); }
+  .toc a[aria-current="true"] { border-color: var(--accent); }
+  section { padding-top: 40px; margin-top: 40px; }
+}
+@media (max-width: 720px) {
+  .triad, .grid2, .threats { grid-template-columns: minmax(0, 1fr); }
+  .triad > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .steps li + li { border-left: 1px solid var(--line); border-top: 0; }
+  .steps li:first-child { border-radius: 8px 8px 0 0; }
+  .steps li:last-child { border-radius: 0 0 8px 8px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="toc" aria-label="Temas">
+    <p class="toc-label">Temas</p>
+    <ol>
+      <li><a href="#seguridad" data-target="seguridad"><span>01</span><span>Cómo dar seguridad a un sistema</span></a></li>
+      <li><a href="#respaldo" data-target="respaldo"><span>02</span><span>Copia de seguridad y restauración</span></a></li>
+      <li><a href="#tendencias" data-target="tendencias"><span>03</span><span>Tendencias y avances</span></a></li>
+      <li><a href="#amenazas" data-target="amenazas"><span>04</span><span>Amenazas externas</span></a></li>
+      <li><a href="#incidentes" data-target="incidentes"><span>05</span><span>Detección y respuesta a incidentes</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header>
+      <p class="eyebrow">Sistemas Operativos</p>
+      <h1>Seguridad en Sistemas Operativos</h1>
+      <p class="lede">Cinco temas para proteger un sistema, respaldar sus datos, reconocer amenazas y responder cuando algo falla.</p>
+    </header>
+
+    <!-- 1 -->
+    <section id="seguridad" class="first">
+      <div class="sec-head"><span class="sec-num">01</span><h2>Cómo dar seguridad a un sistema</h2></div>
+      <p>La seguridad se construye por capas. Cada capa asume que la anterior puede fallar, de modo que un error en una no deja todo expuesto. Toda medida busca proteger tres propiedades.</p>
+
+      <div class="triad">
+        <div><b>Confidencialidad</b><span>Solo accede a la información quien está autorizado.</span></div>
+        <div><b>Integridad</b><span>Los datos no cambian sin permiso ni sin dejar registro.</span></div>
+        <div><b>Disponibilidad</b><span>El servicio responde cuando los usuarios lo necesitan.</span></div>
+      </div>
+
+      <h3>1. Nivel aplicación</h3>
+      <p>La aplicación es la puerta que usan las personas, por lo que concentra la mayoría de los ataques.</p>
+      <ul class="plain">
+        <li><strong>Autenticación.</strong> Verificar quién es el usuario con contraseña y, cuando sea posible, un segundo factor.</li>
+        <li><strong>Autorización.</strong> Asignar roles y permisos para que cada usuario vea y haga solo lo que le corresponde.</li>
+        <li><strong>Validación de entradas.</strong> Tratar todo dato escrito por el usuario como no confiable, para evitar inyección SQL y XSS.</li>
+        <li><strong>Contraseñas con hash y sal.</strong> Guardarlas con algoritmos como bcrypt o Argon2, nunca en texto plano.</li>
+        <li><strong>Comunicación cifrada.</strong> Usar HTTPS (TLS) para que los datos no viajen legibles por la red.</li>
+        <li><strong>Sesiones y actualizaciones.</strong> Expirar sesiones inactivas y aplicar parches a las librerías que usa la aplicación.</li>
+        <li><strong>Registros (logs).</strong> Guardar quién hizo qué y cuándo, para auditar y detectar abusos.</li>
+      </ul>
+
+      <p class="code-cap">C#: consulta vulnerable</p>
+<pre><code>string sql = "SELECT * FROM Usuarios WHERE nombre = '" + txtNombre.Text + "'";
+<span class="cm">// Si el usuario escribe  ' OR '1'='1  la condición siempre es verdadera.</span></code></pre>
+      <p class="code-cap">C#: consulta parametrizada</p>
+<pre><code>var cmd = new SqlCommand("SELECT * FROM Usuarios WHERE nombre = @nombre", conexion);
+cmd.Parameters.AddWithValue("@nombre", txtNombre.Text);
+<span class="cm">// El valor se envía como dato, nunca como parte de la instrucción SQL.</span></code></pre>
+
+      <h3>2. Nivel base de datos</h3>
+      <p>La base de datos guarda el activo más valioso. Se protege aunque la aplicación sea segura, porque alguien podría llegar a ella por otro camino.</p>
+      <ul class="plain">
+        <li><strong>Mínimo privilegio.</strong> Cada cuenta recibe solo los permisos que necesita. La aplicación no se conecta como administrador.</li>
+        <li><strong>Roles.</strong> Los permisos se agrupan en roles y los usuarios se asignan a ellos, lo que facilita revisar quién puede qué.</li>
+        <li><strong>Cifrado.</strong> Cifrar los datos en reposo (por ejemplo TDE en SQL Server) y las conexiones en tránsito.</li>
+        <li><strong>Auditoría.</strong> Registrar accesos y cambios en las tablas sensibles.</li>
+        <li><strong>Aislamiento de red.</strong> El servidor de base de datos queda detrás de un firewall, sin acceso directo desde Internet.</li>
+        <li><strong>Copias de seguridad.</strong> Respaldos periódicos y probados (tema 2).</li>
+      </ul>
+
+      <p class="code-cap">T-SQL: permisos mediante un rol</p>
+<pre><code>CREATE ROLE rol_consulta;
+GRANT SELECT ON dbo.Productos TO rol_consulta;
+ALTER ROLE rol_consulta ADD MEMBER usuario_ventas;
+
+<span class="cm">-- Quitar un permiso que ya no corresponde</span>
+REVOKE SELECT ON dbo.Productos FROM rol_consulta;</code></pre>
+    </section>
+
+    <!-- 2 -->
+    <section id="respaldo">
+      <div class="sec-head"><span class="sec-num">02</span><h2>Qué es la copia de seguridad y la restauración de una base de datos</h2></div>
+      <p>Una <strong>copia de seguridad</strong> (backup) es un duplicado de los datos guardado en otro lugar. La <strong>restauración</strong> es el proceso de recuperar la base de datos desde esa copia después de un borrado accidental, una falla de hardware, una corrupción o un ataque.</p>
+
+      <h3>Tipos de copia</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tipo</th><th>Qué guarda</th><th>Frecuencia habitual</th></tr></thead>
+          <tbody>
+            <tr><td>Completa</td><td>Toda la base de datos. Es el punto de partida de cualquier restauración.</td><td>Semanal o diaria</td></tr>
+            <tr><td>Diferencial</td><td>Solo lo que cambió desde la última copia completa. Es más pequeña y rápida.</td><td>Diaria</td></tr>
+            <tr><td>Registro de transacciones</td><td>Las transacciones desde el último respaldo del registro. Permite volver a un instante exacto. Requiere el modelo de recuperación completo.</td><td>Cada 15 a 60 minutos</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Regla 3-2-1</h3>
+      <p>Mantener <strong>3</strong> copias de los datos, en <strong>2</strong> tipos de medio distintos, con <strong>1</strong> copia fuera del lugar principal. Una copia que está en el mismo servidor se pierde junto con él.</p>
+
+      <h3>Crear las copias (SQL Server)</h3>
+<pre><code><span class="cm">-- Copia completa</span>
+BACKUP DATABASE Ventas
+TO DISK = 'D:\Respaldos\Ventas_completa.bak'
+WITH INIT, CHECKSUM;
+
+<span class="cm">-- Copia diferencial</span>
+BACKUP DATABASE Ventas
+TO DISK = 'D:\Respaldos\Ventas_dif.bak'
+WITH DIFFERENTIAL, CHECKSUM;
+
+<span class="cm">-- Copia del registro de transacciones</span>
+BACKUP LOG Ventas
+TO DISK = 'D:\Respaldos\Ventas_log.trn';</code></pre>
+
+      <h3>Restaurar en orden</h3>
+      <p>Se restaura primero la copia completa, luego la última diferencial y al final los registros de transacciones. Todos los pasos menos el último usan <code>NORECOVERY</code> para que la base de datos siga esperando más copias.</p>
+<pre><code>RESTORE DATABASE Ventas
+FROM DISK = 'D:\Respaldos\Ventas_completa.bak' WITH NORECOVERY;
+
+RESTORE DATABASE Ventas
+FROM DISK = 'D:\Respaldos\Ventas_dif.bak' WITH NORECOVERY;
+
+RESTORE LOG Ventas
+FROM DISK = 'D:\Respaldos\Ventas_log.trn' WITH RECOVERY;</code></pre>
+
+      <div class="callout"><b>Dos metas que fijan la estrategia.</b> El RPO es la cantidad de datos que la organización puede perder, medida en tiempo, y define cada cuánto se respalda. El RTO es el tiempo máximo que el sistema puede estar caído, y define qué tan rápido debe ser la restauración.</div>
+
+      <p style="margin-top:18px">Una copia que nunca se restauró no está comprobada. Conviene probar restauraciones periódicas en otro servidor y validar los archivos con <code>RESTORE VERIFYONLY</code>.</p>
+    </section>
+
+    <!-- 3 -->
+    <section id="tendencias">
+      <div class="sec-head"><span class="sec-num">03</span><h2>Tendencias y avances en sistemas operativos</h2></div>
+      <p>Los sistemas operativos cambian por tres presiones: más amenazas, más equipos conectados y más cargas ejecutadas en servidores compartidos.</p>
+
+      <div class="grid2">
+        <div class="item">
+          <h3>Virtualización y contenedores</h3>
+          <p>Un hipervisor ejecuta varios sistemas operativos en una sola máquina física. Los contenedores (Docker) comparten el kernel del anfitrión, pesan menos y arrancan en segundos.</p>
+        </div>
+        <div class="item">
+          <h3>Nube y sistemas ligeros</h3>
+          <p>Gran parte del cómputo corre en servidores remotos con sistemas mínimos, pensados solo para ejecutar contenedores o máquinas virtuales.</p>
+        </div>
+        <div class="item">
+          <h3>Seguridad desde el arranque</h3>
+          <p>Secure Boot verifica que el cargador y el kernel estén firmados. El chip TPM guarda claves de forma protegida, y el cifrado de disco (BitLocker, LUKS) protege los datos si el equipo se pierde. Windows 11 exige TPM 2.0.</p>
+        </div>
+        <div class="item">
+          <h3>Aislamiento de aplicaciones</h3>
+          <p>Android e iOS ejecutan cada app en un espacio aislado (sandbox) y piden permisos explícitos para la cámara, la ubicación o los archivos.</p>
+        </div>
+        <div class="item">
+          <h3>Sistemas inmutables</h3>
+          <p>El sistema base es de solo lectura y se actualiza como una unidad. Si una actualización falla, se vuelve a la versión anterior. Lo usan ChromeOS, Android y distribuciones como Fedora Silverblue.</p>
+        </div>
+        <div class="item">
+          <h3>Rust en el kernel</h3>
+          <p>Linux admite código en Rust desde la versión 6.1. El lenguaje evita por diseño muchos errores de memoria, que causan gran parte de las vulnerabilidades en C.</p>
+        </div>
+        <div class="item">
+          <h3>eBPF</h3>
+          <p>Permite cargar programas verificados dentro del kernel de Linux para monitorear red y procesos sin modificar el kernel ni reiniciar.</p>
+        </div>
+        <div class="item">
+          <h3>Procesadores ARM</h3>
+          <p>Apple Silicon y Windows en ARM ofrecen más rendimiento por vatio. Los sistemas operativos se adaptan a esta arquitectura además de x86.</p>
+        </div>
+        <div class="item">
+          <h3>Inteligencia artificial integrada</h3>
+          <p>Asistentes dentro del sistema, como Copilot en Windows o Apple Intelligence, y gestión adaptativa de energía y recursos según el uso.</p>
+        </div>
+        <div class="item">
+          <h3>IoT y tiempo real</h3>
+          <p>Dispositivos pequeños usan sistemas operativos de tiempo real como FreeRTOS o Zephyr, que garantizan tiempos de respuesta con muy poca memoria.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="amenazas">
+      <div class="sec-head"><span class="sec-num">04</span><h2>Amenazas externas</h2></div>
+      <p>Son ataques que se originan fuera de la organización. Estos cuatro tipos aparecen con más frecuencia.</p>
+
+      <div class="threats">
+        <article class="threat">
+          <h3>Ataques de malware</h3>
+          <p>Software malicioso que se instala sin que el usuario lo sepa. Incluye virus, gusanos, troyanos, spyware y rootkits.</p>
+          <span class="lbl">Cómo llega</span>
+          <p>Adjuntos de correo, programas pirata, memorias USB y vulnerabilidades sin parche.</p>
+          <span class="lbl">Defensa</span>
+          <p>Antivirus o EDR, parches al día, descarga desde fuentes oficiales y uso diario sin privilegios de administrador.</p>
+        </article>
+        <article class="threat">
+          <h3>Phishing e ingeniería social</h3>
+          <p>Engañan a la persona, no al sistema. El phishing usa correos falsos, el smishing usa SMS y el vishing usa llamadas. En el pretexting el atacante inventa una excusa creíble.</p>
+          <span class="lbl">Cómo llega</span>
+          <p>Mensajes que simulan ser de un banco, de soporte técnico o de un jefe, con urgencia y un enlace.</p>
+          <span class="lbl">Defensa</span>
+          <p>Capacitación, revisar el remitente y la dirección real del enlace, autenticación multifactor y no compartir códigos.</p>
+        </article>
+        <article class="threat">
+          <h3>Ataques de denegación de servicio</h3>
+          <p>Saturan el ancho de banda, la CPU o las conexiones de un servidor hasta que deja de atender a usuarios legítimos. En un DDoS el tráfico viene de muchos equipos infectados que forman una botnet.</p>
+          <span class="lbl">Defensa</span>
+          <p>Firewall, límite de peticiones por origen, balanceo de carga y servicios de mitigación DDoS o CDN.</p>
+        </article>
+        <article class="threat">
+          <h3>Ataques de ransomware</h3>
+          <p>Cifra los archivos de la víctima y exige un pago por la clave. Suele entrar por phishing o por servicios expuestos, como el escritorio remoto, sin protección.</p>
+          <span class="lbl">Defensa</span>
+          <p>Copias de seguridad fuera de línea y probadas, parches, segmentación de red y mínimo privilegio. Pagar no garantiza recuperar los datos.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section id="incidentes">
+      <div class="sec-head"><span class="sec-num">05</span><h2>Detección y respuesta a incidentes de seguridad</h2></div>
+      <p>Un incidente es cualquier evento que compromete la confidencialidad, la integridad o la disponibilidad de un sistema. Ninguna defensa es perfecta, así que se necesita detectar rápido y actuar con un plan.</p>
+
+      <h3>Detección</h3>
+      <p>Señales que justifican una alerta: intentos de inicio de sesión fallidos en serie, tráfico saliente inusual, procesos desconocidos, cuentas nuevas con privilegios y cambios masivos en archivos.</p>
+      <ul class="plain">
+        <li><strong>IDS / IPS.</strong> Sistemas que detectan, y en el caso del IPS bloquean, tráfico sospechoso en la red.</li>
+        <li><strong>SIEM.</strong> Reúne los registros de muchos equipos en un solo lugar y genera alertas al correlacionar eventos.</li>
+        <li><strong>Antivirus y EDR.</strong> Vigilan el comportamiento de procesos y archivos en cada equipo.</li>
+        <li><strong>Monitoreo de integridad.</strong> Avisa cuando cambian archivos críticos del sistema.</li>
+      </ul>
+
+      <h3>Respuesta: ciclo de vida</h3>
+      <p>El ciclo clásico de la guía NIST SP 800-61 tiene cuatro fases.</p>
+      <ol class="steps">
+        <li><b>Preparación</b><span>Plan escrito, equipo responsable, contactos, herramientas y copias de seguridad listas.</span></li>
+        <li><b>Detección y análisis</b><span>Confirmar que es un incidente, definir su alcance y asignar prioridad.</span></li>
+        <li><b>Contención, erradicación y recuperación</b><span>Aislar los equipos, eliminar la causa y restaurar desde una copia limpia.</span></li>
+        <li><b>Actividad posterior</b><span>Documentar lo ocurrido, extraer lecciones y corregir lo que falló.</span></li>
+      </ol>
+
+      <div class="callout"><b>Ejemplo con ransomware.</b> Una alerta del SIEM indica cifrado masivo de archivos en un servidor. Se desconecta el servidor de la red para contener el avance, se identifica y elimina el programa malicioso, se restaura la base de datos desde la última copia verificada y se corrige la vía de entrada, por ejemplo un parche pendiente.</div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var sections = links.map(function (a) { return document.getElementById(a.dataset.target); });
+
+  links.forEach(function (a, i) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      sections[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  function setActive(id) {
+    links.forEach(function (a) {
+      if (a.dataset.target === id) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  }
+  setActive('seguridad');
+
+  if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) setActive(en.target.id); });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function (s) { obs.observe(s); });
+  }
+})();
+</script>
+</body>
+</html>
